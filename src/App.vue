@@ -50,13 +50,15 @@
     // @ts-ignore
     users.value = await getRepoFile(__GITHUB_USER_PATH__)
 
-    const [items, ratings] = await Promise.all([
+    const [items, ratings, categories] = await Promise.all([
       // @ts-ignore
       getRepoFile(__GITHUB_ITEM_PATH__),
       // @ts-ignore
-      getRepoFile(__GITHUB_RATING_PATH__)
+      getRepoFile(__GITHUB_RATING_PATH__),
+      // @ts-ignore
+      getRepoFile(__GITHUB_CATEGORY_PATH__)
     ])
-    DM.setData(items, ratings)
+    DM.setData(items, ratings, categories)
 
     app.setLoaded(true)
   }

@@ -47,13 +47,12 @@ export async function pushRepoFile(path: string, message: string, content: any) 
     }
   } catch (err: any) {
     if (err.status !== 404) {
-      console.log(err.toString())
+      console.error(err.toString())
       throw err
     }
   }
 
   const encoded = toBase64(JSON.stringify(content, null, 2))
-  console.log(sha, path, message, encoded, content)
 
   // create/update file (this makes the commit)
   const response = await DM.github.repos.createOrUpdateFileContents({

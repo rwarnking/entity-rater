@@ -1,92 +1,103 @@
 <template>
 
-  <v-data-table
-    :items="items"
-    :headers="headers"
-    items-per-page="10"
-  >
-
-    <template v-slot:item.A1="{ item }">
-      <!-- @vue-ignore -->
-      <v-rating
-        v-model="ratings[item.id]['A1']"
-        @update:model-value="updateRating(item.id, 'A1')"
-        length="5"
-        density="compact"
-        :color="ratings[item.id]['A1'] > 0 ? 'amber' : 'default'"
-        :half-increments="false"
+  <div>
+    <v-text-field
+      v-model="search"
+      label="Search"
+      prepend-inner-icon="mdi-magnify"
+      variant="outlined"
+      density="compact"
+      class="ma-1"
+      clearable
+      hide-details
+      hide-spin-buttons
+      single-line
       />
-    </template>
 
-    <template v-slot:item.A2="{item}">
-      <!-- @vue-ignore -->
-      <v-rating
-        v-model="ratings[item.id]['A2']"
-        @update:model-value="updateRating(item.id, 'A2')"
-        :color="ratings[item.id]['A2'] > 0 ? 'amber' : 'default'"
-        length="5"
-        density="compact"
-      />
-    </template>
+    <v-data-table
+      :items="items"
+      :headers="headers"
+      :search="search"
+      items-per-page="10"
+    >
 
-    <template v-slot:item.A3="{item}">
-      <!-- @vue-ignore -->
-      <v-rating
-        v-model="ratings[item.id]['A3']"
-        @update:model-value="updateRating(item.id, 'A3')"
-        :color="ratings[item.id]['A3'] > 0 ? 'amber' : 'default'"
-        length="5"
-        density="compact"
-      />
-    </template>
+      <template v-slot:item="{ item }">
+        <tr>
+          <td>{{ item.name }}</td>
 
-    <template v-slot:item.A4="{item}">
-      <!-- @vue-ignore -->
-      <v-rating
-        v-model="ratings[item.id]['A4']"
-        @update:model-value="updateRating(item.id, 'A4')"
-        :color="ratings[item.id]['A4'] > 0 ? 'amber' : 'default'"
-        length="5"
-        density="compact"
-      />
-    </template>
+          <td v-for="c in categories" :key="c.id">
 
-  </v-data-table>
+              <!-- @vue-ignore -->
+              <v-rating
+                v-if="c.type === 'integer'"
+                v-model="ratings[item.id][c.id]"
+                @update:model-value="updateRating(item.id, c.id)"
+                :length="c?.max"
+                density="compact"
+                :color="ratings[item.id][c.id] > 0 ? 'amber' : 'default'"
+                :half-increments="false"
+                />
+
+              <!-- @vue-ignore -->
+              <v-checkbox
+                v-if="c.type === 'boolean'"
+                v-model="ratings[item.id][c.id]"
+                color="primary"
+                @update:model-value="updateRating(item.id, c.id)"
+                density="compact"
+                hide-details
+                hide-spin-buttons
+                />
+          </td>
+        </tr>
+      </template>
+
+    </v-data-table>
+  </div>
 
 </template>
 
 <script lang="ts" setup>
-  import DM, { type ItemRatings, type RatingItem } from '@/use/data-manager';
+  import DM, { type ItemRatings, type RatingCategory, type RatingItem } from '@/use/data-manager';
   import { ref, onMounted, type Ref } from 'vue';
+
+  const search = ref("")
 
   const items: Ref<Array<RatingItem>> = ref([])
   const ratings: Ref<ItemRatings> = ref({})
+  const categories: Ref<Array<RatingCategory>> = ref([])
 
-  const headers = [
-    {title:"Name", key:"name"},
-    {title:"A1", key:"A1"},
-    {title:"A2", key:"A2"},
-    {title:"A3", key:"A3"},
-    {title:"A4", key:"A4"}
-  ]
+  const headers: Ref<Array<{ title: string, key: string }>> = ref([])
 
-  const attributes = headers.filter(d => d.key !== "name").map(d => d.key)
-
-  function updateRating(itemId: number, attr: string) {
-    if (ratings.value[itemId] && ratings.value[itemId][attr]) {
-      DM.setRating(itemId, attr, ratings.value[itemId][attr])
+  function updateRating(itemId: number, category: number) {
+    if (ratings.value[itemId] && ratings.value[itemId][category]) {
+      DM.setRating(itemId, category, ratings.value[itemId][category])
     }
   }
 
   function loadData() {
     const obj: ItemRatings = {}
+    // set categories
+    categories.value = DM.categories
+
+    // add existing ratings (or 0) for all items
     DM.items.forEach(d => {
       const silly = obj[d.id] || {}
-      attributes.forEach(attr => {
-        silly[attr] = DM.getRating(d.id, attr)
+      DM.categories.forEach(c => {
+        silly[c.id] = DM.getRating(d.id, c.id)
       })
       obj[d.id] = silly
     })
+
+    let h = [{ title: "Name", key: "name" }]
+    h = h.concat(DM.categories.map(c => ({
+      title: c.name,
+      key: ""+c.id,
+      // @ts-ignore
+      value: (d: any) => ratings.value[d.id][c.id]
+    })))
+
+    headers.value = h
     ratings.value = obj
     items.value = DM.items
   }

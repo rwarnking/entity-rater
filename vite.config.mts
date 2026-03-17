@@ -10,6 +10,7 @@ import {
   GITHUB_ITEM_PATH,
   GITHUB_RATING_PATH,
   GITHUB_USER_PATH,
+  GITHUB_CATEGORY_PATH,
 } from "./secrets.config"
 
 // https://vitejs.dev/config/
@@ -44,6 +45,7 @@ export default defineConfig({
     '__GITHUB_ITEM_PATH__': JSON.stringify(GITHUB_ITEM_PATH),
     '__GITHUB_USER_PATH__': JSON.stringify(GITHUB_USER_PATH),
     '__GITHUB_RATING_PATH__': JSON.stringify(GITHUB_RATING_PATH),
+    '__GITHUB_CATEGORY_PATH__': JSON.stringify(GITHUB_CATEGORY_PATH)
   },
   resolve: {
     alias: {
