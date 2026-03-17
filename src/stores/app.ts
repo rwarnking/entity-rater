@@ -1,17 +1,21 @@
 // Utilities
 import { defineStore } from 'pinia'
-import { ref, type Ref } from 'vue'
+import { computed, ref, type Ref } from 'vue'
 
 export const useAppStore = defineStore('app', () => {
 
   const loaded = ref(false)
 
   const token = ref("")
-  const tokenDialog = ref(false)
+  const loginDialog = ref(true)
 
   const currentUser = ref("")
-  const userDialog = ref(false)
+  const loggedIn = ref(false)
   const users: Ref<Array<string>> = ref([])
+
+  const changes: Ref<Set<string>> = ref(new Set())
+
+  const hasChanges = computed(() => changes.value.size > 0)
 
   function setLoaded(value: boolean) {
     loaded.value = value
@@ -32,17 +36,39 @@ export const useAppStore = defineStore('app', () => {
     localStorage.setItem("USERNAME", username)
   }
 
+  function addChanges(key: string) {
+    changes.value.add(key)
+  }
+
+  function deleteChanges(key: string) {
+    return changes.value.delete(key)
+  }
+
+  function toggleChanges(key: string) {
+    if (changes.value.has(key)) {
+      addChanges(key)
+    } else {
+      deleteChanges(key)
+    }
+  }
+
   return {
     loaded,
     token,
-    tokenDialog,
+    loginDialog,
     currentUser,
-    userDialog,
+    loggedIn,
     users,
+    hasChanges,
+    changes,
 
     setLoaded,
     readStorage,
     setGithubToken,
-    setUser
+    setUser,
+
+    addChanges,
+    deleteChanges,
+    toggleChanges
   }
 })

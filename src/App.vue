@@ -3,10 +3,9 @@
     <v-main>
 
       <TopBar/>
-      <TokenDialog/>
-      <UserDialog v-if="token && users.length"/>
+      <LoginDialog/>
 
-      <div v-if="loaded && currentUser">
+      <div v-if="loaded && loggedIn">
 
         <v-tabs v-model="tab">
           <v-tab value="rating">Rating</v-tab>
@@ -30,74 +29,43 @@
 
 <script lang="ts" setup>
   import DM from './use/data-manager';
-  import { onMounted, ref, watch } from 'vue';
+  import { onBeforeMount, onMounted, ref } from 'vue';
   import { storeToRefs } from 'pinia';
   import { useAppStore } from '@/stores/app';
   import RatingView from './components/RatingView.vue';
-  import UserDialog from './components/UserDialog.vue';
   import TopBar from './components/TopBar.vue';
-  import TokenDialog from './components/TokenDialog.vue';
+  import LoginDialog from './components/LoginDialog.vue';
+  import { getRepoFile } from './use/repo-api';
 
   const tab = ref("rating")
 
   const app = useAppStore()
   const {
     loaded,
-    currentUser,
-    userDialog,
+    loggedIn,
     users,
-    token,
-    tokenDialog
   } = storeToRefs(app)
 
-  function makeUrl(file: string) {
-    // @ts-ignore
-    return `https://api.github.com/repos/${__GITHUB_USER__}/${__GITHUB_REPO__}/contents/${file}/${token.value}`
-  }
-
-  async function getFromRepo(file: string) {
-    const res = await fetch(makeUrl(file))
-    const json = await res.json()
-    return JSON.parse(atob(json.content))
-  }
-
   async function loadData() {
-    if (!token.value) {
-      tokenDialog.value = true
-      return
-    }
-
     // @ts-ignore
-    users.value = await getFromRepo(__GITHUB_USER_PATH__)
-
-    if (!currentUser.value) {
-      userDialog.value = true
-      return
-    }
+    users.value = await getRepoFile(__GITHUB_USER_PATH__)
 
     const [items, ratings] = await Promise.all([
       // @ts-ignore
-      getFromRepo(__GITHUB_ITEM_PATH__),
+      getRepoFile(__GITHUB_ITEM_PATH__),
       // @ts-ignore
-      getFromRepo(__GITHUB_RATING_PATH__)
+      getRepoFile(__GITHUB_RATING_PATH__)
     ])
     DM.setData(items, ratings)
 
     app.setLoaded(true)
   }
 
-  onMounted(function() {
+  onBeforeMount(function() {
     // read data from local storage first
     app.readStorage()
-    // then fetch data from repo
-    loadData()
   })
 
-  // fetch data from repo if token changes and
-  // data was not previously loaded
-  watch(token, function() {
-    if (token.value && !loaded.value) {
-      loadData()
-    }
-  })
+  onMounted(loadData)
+
 </script>

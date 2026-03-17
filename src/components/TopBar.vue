@@ -12,7 +12,8 @@
       <div>User: {{ currentUser || '?' }}</div>
 
       <v-btn
-        color="primary"
+        :color="hasChanges ? 'success' : 'default'"
+        :disabled="!hasChanges"
         density="comfortable"
         variant="tonal"
         @click="commitChanges"
@@ -26,12 +27,23 @@
 
 <script lang="ts" setup>
   import { useAppStore } from '@/stores/app'
+  import DM from '@/use/data-manager'
+  import { pushRepoFile } from '@/use/repo-api'
   import { storeToRefs } from 'pinia'
 
   const app = useAppStore()
-  const { currentUser } = storeToRefs(app)
+  const { currentUser, hasChanges } = storeToRefs(app)
 
   async function commitChanges() {
-    alert("saved")
+    if (hasChanges.value || !app.token || !app.currentUser) {
+
+      app.changes.forEach((key: string) => {
+        pushRepoFile(
+          key + ".json",
+          app.currentUser + " added changes",
+          key === "items" ? DM.items : DM.ratings
+        )
+      })
+    }
   }
 </script>
