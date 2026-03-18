@@ -1,6 +1,6 @@
 <template>
-  <v-app-bar density="compact">
-    <div class="d-flex justify-space-between pl-2 pr-2" style="width: 100%;">
+  <v-toolbar density="compact" height="48">
+    <div class="d-flex justify-space-between align-center pl-2 pr-2" style="width: 100%;">
 
       <v-btn
         icon="mdi-theme-light-dark"
@@ -9,20 +9,20 @@
         @click="$vuetify.theme.cycle()"
         />
 
-      <div>User: {{ currentUser || '?' }}</div>
+      <div>user: {{ currentUser || '?' }}</div>
 
       <v-btn
         :color="hasChanges ? 'success' : 'default'"
         :disabled="!hasChanges"
         density="comfortable"
-        variant="tonal"
+        variant="plain"
         @click="commitChanges"
         >
         SAVE
       </v-btn>
 
     </div>
-  </v-app-bar>
+  </v-toolbar>
 </template>
 
 <script lang="ts" setup>

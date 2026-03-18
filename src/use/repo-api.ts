@@ -14,7 +14,7 @@ function toBase64(str: string) {
 export async function getRepoFile(file: string) {
   try {
 
-    const res = await fetch(getUrl(file))
+    const res = await fetch(getUrl(file + ".json"))
     const json = await res.json()
     return JSON.parse(atob(json.content))
   } catch(err: any) {

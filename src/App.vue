@@ -48,15 +48,15 @@
 
   async function loadData() {
     // @ts-ignore
-    users.value = await getRepoFile(__GITHUB_USER_PATH__)
+    users.value = await getRepoFile(__GITHUB_DATA_USERS__)
 
     const [items, ratings, categories] = await Promise.all([
       // @ts-ignore
-      getRepoFile(__GITHUB_ITEM_PATH__),
+      getRepoFile(__GITHUB_DATA_ITEMS__),
       // @ts-ignore
-      getRepoFile(__GITHUB_RATING_PATH__),
+      getRepoFile(__GITHUB_DATA_RATINGS__),
       // @ts-ignore
-      getRepoFile(__GITHUB_CATEGORY_PATH__)
+      getRepoFile(__GITHUB_DATA_CATEGORIES__)
     ])
     DM.setData(items, ratings, categories)
 

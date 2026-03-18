@@ -70,7 +70,7 @@
   const headers: Ref<Array<{ title: string, key: string }>> = ref([])
 
   function updateRating(itemId: number, category: number) {
-    if (ratings.value[itemId] && ratings.value[itemId][category]) {
+    if (ratings.value[itemId] && ratings.value[itemId][category] !== undefined) {
       DM.setRating(itemId, category, ratings.value[itemId][category])
     }
   }

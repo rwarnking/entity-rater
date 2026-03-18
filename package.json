@@ -16,6 +16,7 @@
     "@fontsource/roboto": "^5.2.9",
     "@mdi/font": "7.4.47",
     "@octokit/rest": "^22.0.1",
+    "object-hash": "^3.0.0",
     "pinia": "^3.0.4",
     "vue": "^3.5.26",
     "vuetify": "^4.0.0"
@@ -23,6 +24,7 @@
   "devDependencies": {
     "@tsconfig/node22": "^22.0.5",
     "@types/node": "^22.0.5",
+    "@types/object-hash": "^3.0.6",
     "@vitejs/plugin-vue": "^6.0.3",
     "@vue/tsconfig": "^0.8.1",
     "eslint": "^9.39.2",

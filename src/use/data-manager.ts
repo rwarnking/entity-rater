@@ -1,5 +1,6 @@
 import { useAppStore } from "@/stores/app"
 import { Octokit } from "@octokit/rest"
+import hash from "object-hash"
 
 export type IntegerRating = Record<string, number>
 export type BooleanRating = Record<string, boolean>
@@ -29,6 +30,8 @@ class DataManager {
   ratings: UserRatings = {}
   categories: Array<RatingCategory> = []
 
+  ratingsHash: string = ""
+
   github: Octokit | null = null
 
   init(apiToken: string) {
@@ -38,6 +41,7 @@ class DataManager {
   setData(items: Array<RatingItem>, ratings: UserRatings, categories: Array<RatingCategory>) {
     this.items = items
     this.ratings = ratings
+    this.ratingsHash = hash(ratings)
     this.categories = categories
   }
 
@@ -50,10 +54,23 @@ class DataManager {
     const userItemRatings = userRatings[itemId] || {}
     userItemRatings[category] = value
 
-    userRatings[itemId] = userItemRatings
+    if (value === this.getCategoryDefault(category)) {
+      delete userRatings[itemId]
+    } else {
+      userRatings[itemId] = userItemRatings
+    }
+
     this.ratings[user] = userRatings
 
-    app.addChanges("ratings")
+    const newHash = hash(this.ratings)
+
+    if (newHash !== this.ratingsHash) {
+      // @ts-ignore
+      app.addChanges(__GITHUB_DATA_RATINGS__)
+    } else {
+      // @ts-ignore
+      app.deleteChanges(__GITHUB_DATA_RATINGS__)
+    }
   }
 
   getRating(itemId: number, category: number, user?: string) {

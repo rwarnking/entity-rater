@@ -4,17 +4,11 @@ import Fonts from 'unplugin-fonts/vite'
 import { defineConfig } from 'vite'
 import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 
-import {
-  GITHUB_REPO,
-  GITHUB_USER,
-  GITHUB_ITEM_PATH,
-  GITHUB_RATING_PATH,
-  GITHUB_USER_PATH,
-  GITHUB_CATEGORY_PATH,
-} from "./secrets.config"
+export const BASE_PATH = "/entity-rater/"
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: BASE_PATH,
   plugins: [
     Vue({
       template: { transformAssetUrls },
@@ -40,12 +34,13 @@ export default defineConfig({
   ],
   define: {
     'process.env': {},
-    '__GITHUB_REPO__': JSON.stringify(GITHUB_REPO),
-    '__GITHUB_USER__': JSON.stringify(GITHUB_USER),
-    '__GITHUB_ITEM_PATH__': JSON.stringify(GITHUB_ITEM_PATH),
-    '__GITHUB_USER_PATH__': JSON.stringify(GITHUB_USER_PATH),
-    '__GITHUB_RATING_PATH__': JSON.stringify(GITHUB_RATING_PATH),
-    '__GITHUB_CATEGORY_PATH__': JSON.stringify(GITHUB_CATEGORY_PATH)
+    "__APP_BASE_PATH__": JSON.stringify(BASE_PATH),
+    "__GITHUB_REPO__": JSON.stringify("names-rating-data"),
+    "__GITHUB_USER__": JSON.stringify("rwarnking"),
+    "__GITHUB_DATA_ITEMS__": JSON.stringify("items"),
+    "__GITHUB_DATA_USERS__": JSON.stringify("users"),
+    "__GITHUB_DATA_RATINGS__": JSON.stringify("ratings"),
+    "__GITHUB_DATA_CATEGORIES__": JSON.stringify("categories")
   },
   resolve: {
     alias: {
