@@ -19,6 +19,7 @@
     "object-hash": "^3.0.0",
     "pinia": "^3.0.4",
     "vue": "^3.5.26",
+    "vue-toastification": "^2.0.0-rc.5",
     "vuetify": "^4.0.0"
   },
   "devDependencies": {

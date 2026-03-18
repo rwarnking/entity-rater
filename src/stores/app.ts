@@ -4,6 +4,8 @@ import { computed, ref, type Ref } from 'vue'
 
 export const useAppStore = defineStore('app', () => {
 
+  // state
+  const theme = ref("system")
   const loaded = ref(false)
 
   const token = ref("")
@@ -15,13 +17,23 @@ export const useAppStore = defineStore('app', () => {
 
   const changes: Ref<Set<string>> = ref(new Set())
 
+  const itemDialog = ref(false)
+  const newItemName = ref("")
+  const newItemGender = ref([])
+
+  const _timeItems = ref(0)
+  const _timeRatings = ref(0)
+
+  // getters
   const hasChanges = computed(() => changes.value.size > 0)
 
+  // actions
   function setLoaded(value: boolean) {
     loaded.value = value
   }
 
   function readStorage() {
+    setTheme(localStorage.getItem("THEME") || "system")
     token.value = localStorage.getItem("GITHUB_TOKEN") || ""
     currentUser.value = localStorage.getItem("USERNAME") || ""
   }
@@ -29,6 +41,11 @@ export const useAppStore = defineStore('app', () => {
   function setGithubToken(newToken: string) {
     localStorage.setItem("GITHUB_TOKEN", newToken)
     token.value = newToken
+  }
+
+  function setTheme(mode: string) {
+    localStorage.setItem("THEME", mode)
+    theme.value = mode
   }
 
   function setUser(username: string) {
@@ -52,7 +69,20 @@ export const useAppStore = defineStore('app', () => {
     }
   }
 
+  function openItemDialog(name: string = "") {
+    newItemName.value = name
+    newItemGender.value = []
+    itemDialog.value = true
+  }
+
+  function closeItemDialog() {
+    itemDialog.value = false
+    newItemName.value = ""
+    newItemGender.value = []
+  }
+
   return {
+    theme,
     loaded,
     token,
     loginDialog,
@@ -62,6 +92,14 @@ export const useAppStore = defineStore('app', () => {
     hasChanges,
     changes,
 
+    itemDialog,
+    newItemName,
+    newItemGender,
+
+    _timeItems,
+    _timeRatings,
+
+    setTheme,
     setLoaded,
     readStorage,
     setGithubToken,
@@ -69,6 +107,9 @@ export const useAppStore = defineStore('app', () => {
 
     addChanges,
     deleteChanges,
-    toggleChanges
+    toggleChanges,
+
+    openItemDialog,
+    closeItemDialog
   }
 })

@@ -1,22 +1,38 @@
 import DM from "./data-manager"
 
-function getUrl(file: string) {
-  // @ts-ignore
-  return `https://api.github.com/repos/${__GITHUB_USER__}/${__GITHUB_REPO__}/contents/${file}`
-}
-
 function toBase64(str: string) {
   return btoa(
     String.fromCharCode(...new TextEncoder().encode(str))
   )
 }
 
-export async function getRepoFile(file: string) {
-  try {
+function fromBase64(data: any) {
+  const decoded = atob(data)
+  const utf8data = new Uint8Array(decoded.length)
+  for (let i = 0; i < decoded.length; i++) {
+    utf8data[i] = decoded.charCodeAt(i)
+  }
+  return JSON.parse(new TextDecoder().decode(utf8data))
+}
 
-    const res = await fetch(getUrl(file + ".json"))
-    const json = await res.json()
-    return JSON.parse(atob(json.content))
+export async function getRepoFile(file: string) {
+  if (!DM.github) return
+
+  // @ts-ignore
+  const owner = __GITHUB_USER__
+  // @ts-ignore
+  const repo = __GITHUB_REPO__
+  const branch = "main"
+
+  try {
+    const { data } = await DM.github.repos.getContent({
+      owner,
+      repo,
+      path: file,
+      ref: branch
+    })
+    // @ts-ignore
+    return fromBase64(data.content)
   } catch(err: any) {
     console.error(err.toString())
     return null

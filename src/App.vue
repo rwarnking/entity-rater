@@ -4,6 +4,7 @@
 
       <TopBar/>
       <LoginDialog/>
+      <ItemDialog/>
 
       <div v-if="loaded && loggedIn">
 
@@ -36,6 +37,7 @@
   import TopBar from './components/TopBar.vue';
   import LoginDialog from './components/LoginDialog.vue';
   import { getRepoFile } from './use/repo-api';
+  import ItemDialog from './components/ItemDialog.vue';
 
   const tab = ref("rating")
 
@@ -48,17 +50,9 @@
 
   async function loadData() {
     // @ts-ignore
-    users.value = await getRepoFile(__GITHUB_DATA_USERS__)
+    users.value = await getRepoFile(__GITHUB_DATA_USERS__+".json")
 
-    const [items, ratings, categories] = await Promise.all([
-      // @ts-ignore
-      getRepoFile(__GITHUB_DATA_ITEMS__),
-      // @ts-ignore
-      getRepoFile(__GITHUB_DATA_RATINGS__),
-      // @ts-ignore
-      getRepoFile(__GITHUB_DATA_CATEGORIES__)
-    ])
-    DM.setData(items, ratings, categories)
+    await DM.loadData()
 
     app.setLoaded(true)
   }

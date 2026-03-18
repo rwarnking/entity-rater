@@ -7,18 +7,31 @@
       prepend-inner-icon="mdi-magnify"
       variant="outlined"
       density="compact"
-      class="ma-1"
+      class="mt-1 mb-1"
       clearable
       hide-details
       hide-spin-buttons
       single-line
-      />
+      >
+        <template v-slot:append>
+          <v-btn
+            icon="mdi-plus"
+            rounded="sm"
+            density="comfortable"
+            class="mr-1"
+            :color="numMatches === 0 ? 'success' : 'default'"
+            :disabled="numMatches > 0"
+            @click="app.openItemDialog(search)"
+            />
+        </template>
+      </v-text-field>
 
     <v-data-table
       :items="items"
       :headers="headers"
       :search="search"
       items-per-page="10"
+      @update:currentItems="countMatches"
     >
 
       <template v-slot:item="{ item }">
@@ -30,20 +43,20 @@
               <!-- @vue-ignore -->
               <v-rating
                 v-if="c.type === 'integer'"
-                v-model="ratings[item.id][c.id]"
-                @update:model-value="updateRating(item.id, c.id)"
+                v-model="ratings[item.name][c.id]"
+                @update:model-value="updateRating(item.name, c.id)"
                 :length="c?.max"
                 density="compact"
-                :color="ratings[item.id][c.id] > 0 ? 'amber' : 'default'"
+                :color="ratings[item.name][c.id] > 0 ? 'amber' : 'default'"
                 :half-increments="false"
                 />
 
               <!-- @vue-ignore -->
               <v-checkbox
                 v-if="c.type === 'boolean'"
-                v-model="ratings[item.id][c.id]"
+                v-model="ratings[item.name][c.id]"
                 color="primary"
-                @update:model-value="updateRating(item.id, c.id)"
+                @update:model-value="updateRating(item.name, c.id)"
                 density="compact"
                 hide-details
                 hide-spin-buttons
@@ -58,10 +71,16 @@
 </template>
 
 <script lang="ts" setup>
+  import { useAppStore } from '@/stores/app';
   import DM, { type ItemRatings, type RatingCategory, type RatingItem } from '@/use/data-manager';
-  import { ref, onMounted, type Ref } from 'vue';
+  import { storeToRefs } from 'pinia';
+  import { ref, onMounted, type Ref, watch, onUpdated } from 'vue';
+
+  const app = useAppStore()
+  const { _timeItems } = storeToRefs(app)
 
   const search = ref("")
+  const numMatches = ref(0)
 
   const items: Ref<Array<RatingItem>> = ref([])
   const ratings: Ref<ItemRatings> = ref({})
@@ -69,9 +88,17 @@
 
   const headers: Ref<Array<{ title: string, key: string }>> = ref([])
 
-  function updateRating(itemId: number, category: number) {
-    if (ratings.value[itemId] && ratings.value[itemId][category] !== undefined) {
-      DM.setRating(itemId, category, ratings.value[itemId][category])
+  function countMatches(visible: Array<any>) {
+    if (search.value) {
+      numMatches.value = visible.reduce((acc, d) => acc + (d.raw.name.toLowerCase() === search.value ? 1 : 0), 0)
+    } else {
+      numMatches.value = items.value.length
+    }
+  }
+
+  function updateRating(name: string, category: number) {
+    if (ratings.value[name] && ratings.value[name][category] !== undefined) {
+      DM.setRating(name, category, ratings.value[name][category])
     }
   }
 
@@ -82,11 +109,11 @@
 
     // add existing ratings (or 0) for all items
     DM.items.forEach(d => {
-      const silly = obj[d.id] || {}
+      const silly = obj[d.name] || {}
       DM.categories.forEach(c => {
-        silly[c.id] = DM.getRating(d.id, c.id)
+        silly[c.id] = DM.getRating(d.name, c.id)
       })
-      obj[d.id] = silly
+      obj[d.name] = silly
     })
 
     let h = [{ title: "Name", key: "name" }]
@@ -94,13 +121,31 @@
       title: c.name,
       key: ""+c.id,
       // @ts-ignore
-      value: (d: any) => ratings.value[d.id][c.id]
+      value: (d: any) => ratings.value[d.name][c.id]
     })))
 
     headers.value = h
     ratings.value = obj
     items.value = DM.items
+    numMatches.value = items.value.length
+  }
+
+  function onItemUpdate() {
+    const obj: ItemRatings = {}
+    DM.items.forEach(d => {
+      const silly = obj[d.name] || {}
+      DM.categories.forEach(c => {
+        silly[c.id] = DM.getRating(d.name, c.id)
+      })
+      obj[d.name] = silly
+    })
+    ratings.value = obj
+    items.value = DM.items
   }
 
   onMounted(loadData)
+
+  onUpdated(onItemUpdate)
+
+  watch(_timeItems, onItemUpdate)
 </script>

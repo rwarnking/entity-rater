@@ -10,8 +10,14 @@ import type { App } from 'vue'
 
 // Plugins
 import vuetify from './vuetify'
+import Toast from "vue-toastification";
+
+// Styles
+import "vue-toastification/dist/index.css";
 
 export function registerPlugins (app: App) {
- app.use(vuetify)
- app.use(createPinia());
+ app
+    .use(vuetify)
+    .use(createPinia())
+    .use(Toast, { timeout: 3000 })
 }

@@ -1,12 +1,13 @@
 import { useAppStore } from "@/stores/app"
 import { Octokit } from "@octokit/rest"
 import hash from "object-hash"
+import { getRepoFile } from "./repo-api"
 
 export type IntegerRating = Record<string, number>
 export type BooleanRating = Record<string, boolean>
 export type AttributeRating = IntegerRating | BooleanRating
 
-export type ItemRatings = Record<number, AttributeRating>
+export type ItemRatings = Record<string, AttributeRating>
 export type UserRatings = Record<string, ItemRatings>
 
 export type RatingCategory = {
@@ -19,7 +20,6 @@ export type RatingCategory = {
 }
 
 export type RatingItem = {
-  id: number,
   name: string,
   gender: Array<string>
 }
@@ -30,6 +30,7 @@ class DataManager {
   ratings: UserRatings = {}
   categories: Array<RatingCategory> = []
 
+  itemsHash: string = ""
   ratingsHash: string = ""
 
   github: Octokit | null = null
@@ -38,26 +39,64 @@ class DataManager {
     this.github = new Octokit({ auth: apiToken })
   }
 
+  async loadData() {
+    const [items, ratings, categories] = await Promise.all([
+      // @ts-ignore
+      getRepoFile(__GITHUB_DATA_ITEMS__+".json"),
+      // @ts-ignore
+      getRepoFile(__GITHUB_DATA_RATINGS__+".json"),
+      // @ts-ignore
+      getRepoFile(__GITHUB_DATA_CATEGORIES__+".json")
+    ])
+    const found = new Set()
+    const filtered = items.filter((d: RatingItem) => {
+      if (!found.has(d.name)) {
+        found.add(d.name)
+        return true
+      }
+      return false
+    })
+    this.setData(filtered, ratings, categories)
+  }
+
   setData(items: Array<RatingItem>, ratings: UserRatings, categories: Array<RatingCategory>) {
     this.items = items
+    const sorted = items.map(d => d.name)
+    sorted.sort()
+    this.itemsHash = hash(sorted)
     this.ratings = ratings
     this.ratingsHash = hash(ratings)
     this.categories = categories
   }
 
-  setRating(itemId: number, category: number, value: number | boolean, user?: string) {
+  async updateItems() {
+    // @ts-ignore
+    this.items = await getRepoFile(__GITHUB_DATA_ITEMS__+".json")
+  }
+
+  async updateRatings() {
+    // @ts-ignore
+    this.ratings = await getRepoFile(__GITHUB_DATA_RATINGS__+".json")
+  }
+
+  async updateCategories() {
+    // @ts-ignore
+    this.categories = await getRepoFile(__GITHUB_DATA_CATEGORIES__+".json")
+  }
+
+  setRating(name: string, category: number, value: number | boolean, user?: string) {
     const app = useAppStore()
     user = user || app.currentUser
     if (!user) return
 
     const userRatings = this.ratings[user] || {}
-    const userItemRatings = userRatings[itemId] || {}
+    const userItemRatings = userRatings[name] || {}
     userItemRatings[category] = value
 
     if (value === this.getCategoryDefault(category)) {
-      delete userRatings[itemId]
+      delete userRatings[name]
     } else {
-      userRatings[itemId] = userItemRatings
+      userRatings[name] = userItemRatings
     }
 
     this.ratings[user] = userRatings
@@ -73,11 +112,23 @@ class DataManager {
     }
   }
 
-  getRating(itemId: number, category: number, user?: string) {
+  getRating(name: string, category: number, user?: string) {
     const app = useAppStore()
     user = user || app.currentUser
     const userRanks = this.ratings[user] || {}
-    return userRanks[itemId]?.[category] ?? this.getCategoryDefault(category)
+    return userRanks[name]?.[category] ?? this.getCategoryDefault(category)
+  }
+
+  addItem(name: string, gender: Array<string>) {
+    if (!this.items.find(d => d.name === name)) {
+      this.items.push({ name: name, gender: gender })
+      const app = useAppStore()
+      app._timeItems = Date.now()
+      // @ts-ignore
+      app.addChanges(__GITHUB_DATA_ITEMS__)
+      return true
+    }
+    return false
   }
 
   getCategoryDefault(category: number) {
