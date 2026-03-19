@@ -77,7 +77,7 @@
   import { ref, onMounted, type Ref, watch, onUpdated } from 'vue';
 
   const app = useAppStore()
-  const { _timeItems } = storeToRefs(app)
+  const { _timeItems, _timeRatings } = storeToRefs(app)
 
   const search = ref("")
   const numMatches = ref(0)
@@ -148,4 +148,5 @@
   onUpdated(onItemUpdate)
 
   watch(_timeItems, onItemUpdate)
+  watch(_timeRatings, onItemUpdate)
 </script>

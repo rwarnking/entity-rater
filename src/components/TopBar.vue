@@ -12,13 +12,14 @@
       <div>user: {{ currentUser || '?' }}</div>
 
       <v-btn
-        :color="hasChanges ? 'success' : 'default'"
+        :color="hasChanges ? 'error' : 'default'"
         :disabled="!hasChanges"
         density="comfortable"
-        variant="plain"
+        variant="flat"
+        :class="{ 'blink': hasChanges }"
         @click="commitChanges"
         >
-        SAVE
+        {{ hasChanges ? "save changes" : "no changes" }}
       </v-btn>
 
     </div>
@@ -30,7 +31,7 @@
   import DM from '@/use/data-manager'
   import { pushRepoFile } from '@/use/repo-api'
   import { storeToRefs } from 'pinia'
-import { onMounted } from 'vue'
+  import { onMounted } from 'vue'
   import { useToast } from 'vue-toastification'
   import { useTheme } from 'vuetify'
 
@@ -65,3 +66,15 @@ import { onMounted } from 'vue'
     theme.change(app.theme)
   })
 </script>
+
+<style scoped>
+.blink {
+  animation: warn 1.5s infinite linear;
+}
+
+@keyframes warn {
+  0% { transform: scale(1, 1); }
+  50% { transform: scale(0.85, 1); }
+  100% { transform: scale(1, 1); }
+}
+</style>

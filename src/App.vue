@@ -8,17 +8,22 @@
 
       <div v-if="loaded && loggedIn">
 
-        <v-tabs v-model="tab">
-          <v-tab value="rating">Rating</v-tab>
-          <v-tab value="results">Results</v-tab>
+        <v-tabs v-model="tab" align-tabs="center">
+          <v-tab value="rating_list">Rating List</v-tab>
+          <v-tab value="rating_random">Random Rating</v-tab>
+          <v-tab value="analysis">Analysis</v-tab>
         </v-tabs>
 
         <v-window v-model="tab">
-          <v-window-item value="rating">
-            <RatingView/>
+          <v-window-item value="rating_list">
+            <RatingListView/>
           </v-window-item>
 
-          <v-window-item value="results">
+          <v-window-item value="rating_random">
+            <RatingRandomView/>
+          </v-window-item>
+
+          <v-window-item value="analysis">
 
           </v-window-item>
         </v-window>
@@ -33,10 +38,11 @@
   import { onBeforeMount, onMounted, ref } from 'vue';
   import { storeToRefs } from 'pinia';
   import { useAppStore } from '@/stores/app';
-  import RatingView from './components/RatingView.vue';
+  import RatingListView from './components/RatingListView.vue';
   import TopBar from './components/TopBar.vue';
   import LoginDialog from './components/LoginDialog.vue';
   import { getRepoFile } from './use/repo-api';
+  import RatingRandomView from './components/RatingRandomView.vue';
   import ItemDialog from './components/ItemDialog.vue';
 
   const tab = ref("rating")

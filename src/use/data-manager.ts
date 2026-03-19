@@ -3,9 +3,8 @@ import { Octokit } from "@octokit/rest"
 import hash from "object-hash"
 import { getRepoFile } from "./repo-api"
 
-export type IntegerRating = Record<string, number>
-export type BooleanRating = Record<string, boolean>
-export type AttributeRating = IntegerRating | BooleanRating
+export type RatingValue = number | boolean
+export type AttributeRating = Record<number, RatingValue>
 
 export type ItemRatings = Record<string, AttributeRating>
 export type UserRatings = Record<string, ItemRatings>
@@ -84,7 +83,7 @@ class DataManager {
     this.categories = await getRepoFile(__GITHUB_DATA_CATEGORIES__+".json")
   }
 
-  setRating(name: string, category: number, value: number | boolean, user?: string) {
+  setRating(name: string, category: number, value: RatingValue, user?: string) {
     const app = useAppStore()
     user = user || app.currentUser
     if (!user) return
@@ -110,6 +109,23 @@ class DataManager {
       // @ts-ignore
       app.deleteChanges(__GITHUB_DATA_RATINGS__)
     }
+
+    app._timeRatings = Date.now()
+  }
+
+  hasRatings(name: string, user?: string) {
+    const app = useAppStore()
+    user = user || app.currentUser
+    if (!this.ratings[user]) {
+      return false
+    }
+
+    const userRanks = this.ratings[user] || {}
+    if (!userRanks[name]) {
+      return false
+    }
+
+    return this.categories.some(c => userRanks[name]?.[c.id] !== this.getCategoryDefault(c.id))
   }
 
   getRating(name: string, category: number, user?: string) {
