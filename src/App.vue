@@ -24,7 +24,7 @@
           </v-window-item>
 
           <v-window-item value="analysis">
-
+            <AnalysisView/>
           </v-window-item>
         </v-window>
       </div>
@@ -43,6 +43,7 @@
   import LoginDialog from './components/LoginDialog.vue';
   import { getRepoFile } from './use/repo-api';
   import RatingRandomView from './components/RatingRandomView.vue';
+  import AnalysisView from './components/AnalysisView.vue';
   import ItemDialog from './components/ItemDialog.vue';
 
   const tab = ref("rating")

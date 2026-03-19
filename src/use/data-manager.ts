@@ -113,7 +113,17 @@ class DataManager {
     app._timeRatings = Date.now()
   }
 
-  hasRatings(name: string, user?: string) {
+  hasRatings(name: string, ratingType?: string) {
+    const app = useAppStore()
+    for (let i = 0; i < app.users.length; ++i) {
+      if (this.hasUserRatings(name, app.users[i], ratingType)) {
+        return true
+      }
+    }
+    return false
+  }
+
+  hasUserRatings(name: string, user?: string, ratingType?: string) {
     const app = useAppStore()
     user = user || app.currentUser
     if (!this.ratings[user]) {
@@ -125,7 +135,12 @@ class DataManager {
       return false
     }
 
-    return this.categories.some(c => userRanks[name]?.[c.id] !== this.getCategoryDefault(c.id))
+    const cats = ratingType !== undefined ?
+      this.categories.filter(c => c.type === ratingType) :
+      this.categories
+
+    const itemRanks = userRanks[name] || {}
+    return cats.some(c => itemRanks[c.id] !== undefined && itemRanks[c.id] !== this.getCategoryDefault(c.id))
   }
 
   getRating(name: string, category: number, user?: string) {

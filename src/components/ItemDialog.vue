@@ -40,7 +40,7 @@
   </v-dialog>
 </template>
 
-<script setup>
+<script lang="ts" setup>
   import { useAppStore } from '@/stores/app';
   import DM from '@/use/data-manager';
   import { storeToRefs } from 'pinia';
@@ -55,6 +55,7 @@
 
   function validateName() {
     if (newItemName.value.length > 0) {
+      // @ts-ignore
       newItemName.value = newItemName.value[0].toUpperCase() + newItemName.value.slice(1)
     }
   }

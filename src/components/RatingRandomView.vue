@@ -1,7 +1,5 @@
 <template>
-
-  <v-card>
-
+  <v-card density="compact">
     <v-container v-if="activeItem.name" max-width="500">
 
       <v-row density="compact">
@@ -55,9 +53,7 @@
       </v-row>
 
     </v-container>
-
   </v-card>
-
 </template>
 
 <script lang="ts" setup>
@@ -97,7 +93,7 @@
     // get items without a rating
     DM.items.forEach(d => {
 
-      if (!DM.hasRatings(d.name)) {
+      if (!DM.hasUserRatings(d.name)) {
         remaining.push(d)
       }
 
