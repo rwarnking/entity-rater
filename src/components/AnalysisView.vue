@@ -163,11 +163,22 @@
   function calcScore(name: string) {
     let score = 0, sumWeights = 0
     DM.categories.forEach(c => {
+      const defaultValue = DM.getCategoryDefault(c.id)
       if (c.type === "integer") {
-        let catScore = 0
-        app.users.forEach(u => catScore += (DM.getRating(name, c.id, u) as number))
-        score += catScore * (weights[c.name] || 0)
-        sumWeights += weights[c.name] || 0
+        let catScore = 0, numUsers = 0
+        app.users.forEach(u => {
+          const ur = DM.getRating(name, c.id, u)
+          if (ur !== defaultValue) {
+            catScore += (ur as number)
+            numUsers++
+          }
+        })
+
+        const catWeight = weights[c.name] || 0
+        if (numUsers > 0 && catWeight > 0) {
+          score += (catScore / numUsers) * catWeight
+          sumWeights += catWeight
+        }
       }
     })
     return roundHalf(sumWeights > 0 ? score / sumWeights : score)
