@@ -59,8 +59,8 @@ import DM from '@/use/data-manager';
     if (token.value) {
       app.setGithubToken(token.value)
       if (currentUser.value) {
-        loggedIn.value = true
         DM.init(token.value)
+        loggedIn.value = true
         loginDialog.value = false
       } else {
         // TODO: toast - missing user
@@ -71,11 +71,12 @@ import DM from '@/use/data-manager';
   }
 
   onMounted(function() {
-    loggedIn.value = token.value.length > 0 && currentUser.value.length > 0
-    if (loggedIn.value) {
+    const hasLogin = token.value.length > 0 && currentUser.value.length > 0
+    if (hasLogin) {
       DM.init(token.value)
     }
-    loginDialog.value = !loggedIn.value
+    loggedIn.value = hasLogin
+    loginDialog.value = !hasLogin
   })
 
 </script>

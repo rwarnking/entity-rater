@@ -15,28 +15,46 @@ function fromBase64(data: any) {
   return JSON.parse(new TextDecoder().decode(utf8data))
 }
 
+function getUrl(file: string) {
+  // @ts-ignore
+  return `https://api.github.com/repos/${__GITHUB_USER__}/${__GITHUB_REPO__}/contents/${file}`
+}
+
 export async function getRepoFile(file: string) {
-  if (!DM.github) return
-
-  // @ts-ignore
-  const owner = __GITHUB_USER__
-  // @ts-ignore
-  const repo = __GITHUB_REPO__
-  const branch = "main"
-
   try {
-    const { data } = await DM.github.repos.getContent({
-      owner,
-      repo,
-      path: file,
-      ref: branch
-    })
-    // @ts-ignore
-    return fromBase64(data.content)
+    const res = await fetch(getUrl(file))
+    if (res.ok) {
+      const json = await res.json()
+      return fromBase64(json.content)
+    }
   } catch(err: any) {
     console.error(err.toString())
-    return null
   }
+
+  return null
+
+  // if (DM.github) {
+  //   // @ts-ignore
+  //   const owner = __GITHUB_USER__
+  //   // @ts-ignore
+  //   const repo = __GITHUB_REPO__
+  //   const branch = "main"
+
+  //   try {
+  //     const { data } = await DM.github.repos.getContent({
+  //       owner,
+  //       repo,
+  //       path: file,
+  //       ref: branch
+  //     })
+  //     // @ts-ignore
+  //     return fromBase64(data.content)
+  //   } catch(err: any) {
+  //     console.error(err.toString())
+  //   }
+
+  //   return null
+  // }
 }
 
 export async function pushRepoFile(path: string, message: string, content: any) {

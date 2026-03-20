@@ -35,7 +35,7 @@
 
 <script lang="ts" setup>
   import DM from './use/data-manager';
-  import { onBeforeMount, onMounted, ref } from 'vue';
+  import { onBeforeMount, onMounted, ref, watch } from 'vue';
   import { storeToRefs } from 'pinia';
   import { useAppStore } from '@/stores/app';
   import RatingListView from './components/RatingListView.vue';
@@ -59,6 +59,7 @@
     // @ts-ignore
     users.value = await getRepoFile(__GITHUB_DATA_USERS__+".json")
 
+    if (!DM.github) return
     await DM.loadData()
 
     app.setLoaded(true)
@@ -70,5 +71,7 @@
   })
 
   onMounted(loadData)
+
+  watch(loggedIn, loadData)
 
 </script>
