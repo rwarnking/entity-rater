@@ -81,6 +81,7 @@
         :items="items"
         :headers="headers"
         :search="search"
+        hover
         density="compact"
         >
 

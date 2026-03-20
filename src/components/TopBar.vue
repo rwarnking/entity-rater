@@ -46,20 +46,8 @@
   }
 
   async function commitChanges() {
-    if (hasChanges.value || !app.token || !app.currentUser) {
-
-      app.changes.forEach(async (key: string) => {
-        await pushRepoFile(
-          getFilename(key, app.currentUser),
-          `${app.currentUser} changed ${key}`,
-          // @ts-ignore
-          key === __GITHUB_DATA_ITEMS__ ? DM.items : DM.ratings[app.currentUser]
-        )
-        toast.success("saved changes to " + key)
-      })
-
-      app.changes.clear()
-    }
+    const messages = await DM.commitChanges()
+    messages.forEach(m => toast.success(m))
   }
 
   onMounted(function() {

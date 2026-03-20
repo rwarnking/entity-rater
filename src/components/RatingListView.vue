@@ -32,6 +32,7 @@
       :search="search"
       items-per-page="10"
       density="compact"
+      hover
       @update:currentItems="countMatches"
     >
 

@@ -5,6 +5,7 @@
       <TopBar/>
       <LoginDialog/>
       <ItemDialog/>
+      <LeavePageDialog/>
 
       <div v-if="loaded && loggedIn">
 
@@ -46,6 +47,7 @@
   import AnalysisView from './components/AnalysisView.vue';
   import ItemDialog from './components/ItemDialog.vue';
   import { useToast } from 'vue-toastification';
+import LeavePageDialog from './components/LeavePageDialog.vue';
 
   const tab = ref("rating")
 

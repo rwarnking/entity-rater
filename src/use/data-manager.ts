@@ -1,7 +1,7 @@
 import { useAppStore } from "@/stores/app"
 import { Octokit } from "@octokit/rest"
 import hash from "object-hash"
-import { getFilename, getRepoFile } from "./repo-api"
+import { getFilename, getRepoFile, pushRepoFile } from "./repo-api"
 
 export type RatingValue = number | boolean
 export type AttributeRating = Record<number, RatingValue>
@@ -104,6 +104,34 @@ class DataManager {
   async updateCategories() {
     // @ts-ignore
     this.categories = await getRepoFile(getFilename(__GITHUB_DATA_CATEGORIES__))
+  }
+
+  async commitChanges() {
+    const app = useAppStore()
+    const messages: Array<string> = []
+
+    if (!app.hasChanges || !app.currentUser || !this.github ) {
+      return messages
+    }
+
+    const names = Array.from(app.changes.values())
+
+    const proms = names.map(async (key: string) => {
+      return pushRepoFile(
+        getFilename(key, app.currentUser),
+        `${app.currentUser} changed ${key}`,
+        // @ts-ignore
+        key === __GITHUB_DATA_ITEMS__ ? DM.items : DM.ratings[app.currentUser]
+      ).then(() => {
+        messages.push("saved changes to " + key)
+        app.deleteChanges(key)
+      })
+
+    })
+
+    await Promise.all(proms)
+
+    return messages
   }
 
   setRating(name: string, category: number, value: RatingValue, user?: string) {
