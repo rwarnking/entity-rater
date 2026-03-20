@@ -29,7 +29,7 @@
 <script lang="ts" setup>
   import { useAppStore } from '@/stores/app'
   import DM from '@/use/data-manager'
-  import { pushRepoFile } from '@/use/repo-api'
+  import { getFilename, pushRepoFile } from '@/use/repo-api'
   import { storeToRefs } from 'pinia'
   import { onMounted } from 'vue'
   import { useToast } from 'vue-toastification'
@@ -50,10 +50,10 @@
 
       app.changes.forEach(async (key: string) => {
         await pushRepoFile(
-          key + ".json",
-          `${app.currentUser } added ${key} changes`,
+          getFilename(key, app.currentUser),
+          `${app.currentUser} changed ${key}`,
           // @ts-ignore
-          key === __GITHUB_DATA_ITEMS__ ? DM.items : DM.ratings
+          key === __GITHUB_DATA_ITEMS__ ? DM.items : DM.ratings[app.currentUser]
         )
         toast.success("saved changes to " + key)
       })

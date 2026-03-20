@@ -1,7 +1,7 @@
 import { useAppStore } from "@/stores/app"
 import { Octokit } from "@octokit/rest"
 import hash from "object-hash"
-import { getRepoFile } from "./repo-api"
+import { getFilename, getRepoFile } from "./repo-api"
 
 export type RatingValue = number | boolean
 export type AttributeRating = Record<number, RatingValue>
@@ -39,14 +39,19 @@ class DataManager {
   }
 
   async loadData() {
-    const [items, ratings, categories] = await Promise.all([
+
+    const [items, categories] = await Promise.all([
       // @ts-ignore
-      getRepoFile(__GITHUB_DATA_ITEMS__+".json"),
+      getRepoFile(getFilename(__GITHUB_DATA_ITEMS__)),
       // @ts-ignore
-      getRepoFile(__GITHUB_DATA_RATINGS__+".json"),
-      // @ts-ignore
-      getRepoFile(__GITHUB_DATA_CATEGORIES__+".json")
+      getRepoFile(getFilename(__GITHUB_DATA_CATEGORIES__))
     ])
+
+    // API rate limit exceeded
+    if (!items || !categories) {
+      return console.error("could not load data")
+    }
+
     const found = new Set()
     const filtered = items.filter((d: RatingItem) => {
       if (!found.has(d.name)) {
@@ -55,6 +60,17 @@ class DataManager {
       }
       return false
     })
+
+    const app = useAppStore()
+    const ratings: UserRatings = {}
+
+    // load ratings for all users
+    await Promise.all(app.users.map(async (user) => {
+      // @ts-ignore
+      return getRepoFile(getFilename(__GITHUB_DATA_RATINGS__, user))
+        .then(result => ratings[user] = result)
+    }))
+
     this.setData(filtered, ratings, categories)
   }
 
@@ -70,17 +86,24 @@ class DataManager {
 
   async updateItems() {
     // @ts-ignore
-    this.items = await getRepoFile(__GITHUB_DATA_ITEMS__+".json")
+    this.items = await getRepoFile(getFilename(__GITHUB_DATA_ITEMS__))
   }
 
   async updateRatings() {
-    // @ts-ignore
-    this.ratings = await getRepoFile(__GITHUB_DATA_RATINGS__+".json")
+    const app = useAppStore()
+    const ratings: UserRatings = {}
+    await Promise.all(app.users.map(user => {
+      // @ts-ignore
+      return getRepoFile(getFilename(__GITHUB_DATA_RATINGS__, user))
+        .then(result => ratings[user] = result)
+        .catch(reason => console.error(reason))
+    }))
+    this.ratings = ratings
   }
 
   async updateCategories() {
     // @ts-ignore
-    this.categories = await getRepoFile(__GITHUB_DATA_CATEGORIES__+".json")
+    this.categories = await getRepoFile(getFilename(__GITHUB_DATA_CATEGORIES__))
   }
 
   setRating(name: string, category: number, value: RatingValue, user?: string) {

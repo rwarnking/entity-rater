@@ -41,28 +41,36 @@
   import RatingListView from './components/RatingListView.vue';
   import TopBar from './components/TopBar.vue';
   import LoginDialog from './components/LoginDialog.vue';
-  import { getRepoFile } from './use/repo-api';
+  import { getFilename, getRepoFile } from './use/repo-api';
   import RatingRandomView from './components/RatingRandomView.vue';
   import AnalysisView from './components/AnalysisView.vue';
   import ItemDialog from './components/ItemDialog.vue';
+  import { useToast } from 'vue-toastification';
 
   const tab = ref("rating")
 
+  const toast = useToast()
   const app = useAppStore()
-  const {
-    loaded,
-    loggedIn,
-    users,
-  } = storeToRefs(app)
+  const { loaded, loggedIn, users } = storeToRefs(app)
+
+  let loading = false
 
   async function loadData() {
-    // @ts-ignore
-    users.value = await getRepoFile(__GITHUB_DATA_USERS__+".json")
+    if (loading) return
 
-    if (!DM.github) return
+    loading = true
+    // @ts-ignore
+    users.value = await getRepoFile(getFilename(__GITHUB_DATA_USERS__))
+
     await DM.loadData()
 
-    app.setLoaded(true)
+    if (DM.items.length > 0) {
+      app.setLoaded(true)
+    } else {
+      toast.error("data error - API rate limit exceeded?")
+    }
+
+    loading = false
   }
 
   onBeforeMount(function() {

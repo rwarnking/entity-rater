@@ -21,40 +21,43 @@ function getUrl(file: string) {
 }
 
 export async function getRepoFile(file: string) {
-  try {
-    const res = await fetch(getUrl(file))
-    if (res.ok) {
-      const json = await res.json()
-      return fromBase64(json.content)
+
+  // load authenticated (more API requests allowed)
+  if (DM.github) {
+    // @ts-ignore
+    const owner = __GITHUB_USER__
+    // @ts-ignore
+    const repo = __GITHUB_REPO__
+    const branch = "main"
+
+    try {
+      const { data } = await DM.github.repos.getContent({
+        owner,
+        repo,
+        path: file,
+        ref: branch
+      })
+      // @ts-ignore
+      return fromBase64(data.content)
+    } catch(err: any) {
+      console.warn("could not load file: " + file)
+      console.error(err.toString())
     }
-  } catch(err: any) {
-    console.error(err.toString())
+  } else {
+    // load normally
+    try {
+      const res = await fetch(getUrl(file))
+      if (res.ok) {
+        const json = await res.json()
+        return fromBase64(json.content)
+      }
+    } catch(err: any) {
+      console.warn("could not load file: " + file)
+      console.error(err)
+    }
   }
 
   return null
-
-  // if (DM.github) {
-  //   // @ts-ignore
-  //   const owner = __GITHUB_USER__
-  //   // @ts-ignore
-  //   const repo = __GITHUB_REPO__
-  //   const branch = "main"
-
-  //   try {
-  //     const { data } = await DM.github.repos.getContent({
-  //       owner,
-  //       repo,
-  //       path: file,
-  //       ref: branch
-  //     })
-  //     // @ts-ignore
-  //     return fromBase64(data.content)
-  //   } catch(err: any) {
-  //     console.error(err.toString())
-  //   }
-
-  //   return null
-  // }
 }
 
 export async function pushRepoFile(path: string, message: string, content: any) {
@@ -100,4 +103,12 @@ export async function pushRepoFile(path: string, message: string, content: any) 
   });
 
   return response.data
+}
+
+export function getFilename(key: string, user?: string) {
+  // @ts-ignore
+  if (key === __GITHUB_DATA_RATINGS__) {
+    return `${key}/${user}.json`
+  }
+  return `${key}.json`
 }
