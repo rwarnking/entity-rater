@@ -113,6 +113,17 @@ class DataManager {
     app._timeRatings = Date.now()
   }
 
+  getRaters(name: string, ratingType?: string) {
+    const app = useAppStore()
+    const raters: Array<string> = []
+    for (let i = 0; i < app.users.length; ++i) {
+      if (this.hasUserRatings(name, app.users[i], ratingType)) {
+        raters.push(app.users[i] as string)
+      }
+    }
+    return raters
+  }
+
   hasRatings(name: string, ratingType?: string) {
     const app = useAppStore()
     for (let i = 0; i < app.users.length; ++i) {

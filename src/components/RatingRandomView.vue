@@ -4,10 +4,18 @@
 
       <v-row density="compact">
         <v-col cols="3"><b>Name</b></v-col>
-        <v-col>{{ activeItem.name }}</v-col>
+        <v-col>
+          {{ activeItem.name }}
+          <v-icon
+              v-for="g in activeItem.gender"
+              :icon="getGenderIcon(g)"
+              :color="getGenderColor(g)"
+              size="sm"
+              class="mr-1"
+              />
+        </v-col>
 
       </v-row>
-
 
       <v-row v-for="c in categories" :key="'rating_'+c.id" density="compact">
         <v-col cols="3"><b>{{ c.name }}</b></v-col>
@@ -59,6 +67,7 @@
 <script lang="ts" setup>
   import DM, { type AttributeRating, type RatingCategory, type RatingItem } from '@/use/data-manager';
   import { shuffle } from '@/use/random';
+  import { getGenderColor, getGenderIcon } from '@/use/utils';
   import { ref, onMounted, type Ref, computed  } from 'vue';
 
   const index = ref(0)

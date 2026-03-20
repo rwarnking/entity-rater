@@ -31,12 +31,22 @@
       :headers="headers"
       :search="search"
       items-per-page="10"
+      density="compact"
       @update:currentItems="countMatches"
     >
 
       <template v-slot:item="{ item }">
         <tr>
-          <td>{{ item.name }}</td>
+          <td>
+            {{ item.name }}
+            <v-icon
+              v-for="g in item.gender"
+                :icon="getGenderIcon(g)"
+                :color="getGenderColor(g)"
+                size="sm"
+                class="mr-1"
+              />
+          </td>
 
           <td v-for="c in categories" :key="c.id">
 
@@ -73,6 +83,7 @@
 <script lang="ts" setup>
   import { useAppStore } from '@/stores/app';
   import DM, { type ItemRatings, type RatingCategory, type RatingItem } from '@/use/data-manager';
+  import { getGenderColor, getGenderIcon } from '@/use/utils';
   import { storeToRefs } from 'pinia';
   import { ref, onMounted, type Ref, watch, onUpdated } from 'vue';
 
