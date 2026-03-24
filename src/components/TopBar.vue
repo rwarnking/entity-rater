@@ -1,6 +1,6 @@
 <template>
   <v-toolbar density="compact" height="48">
-    <div class="d-flex justify-space-between align-center pl-2 pr-2" style="width: 100%;">
+    <div class="d-flex justify-space-between align-center pl-2 pr-2" style="width: 100%; font-size: small;">
 
       <v-btn
         icon="mdi-theme-light-dark"
@@ -9,18 +9,29 @@
         @click="toggleTheme"
         />
 
-      <div>user: {{ currentUser || '?' }}</div>
+      <v-chip density="compact" variant="flat">{{ currentUser || '?' }}</v-chip>
 
-      <v-btn
-        :color="hasChanges ? 'error' : 'default'"
-        :disabled="!hasChanges"
-        density="comfortable"
-        variant="flat"
-        :class="{ 'blink': hasChanges }"
-        @click="commitChanges"
-        >
-        {{ hasChanges ? "save changes" : "no changes" }}
-      </v-btn>
+      <div v-if="hasChanges">
+        <v-btn
+          color="warning"
+          density="compact"
+          variant="flat"
+          class="mr-2"
+          @click="discardChanges"
+          >
+          discard changes
+        </v-btn>
+        <v-btn
+          color="success"
+          density="compact"
+          variant="flat"
+          class="blink"
+          @click="commitChanges"
+          >
+          save changes
+        </v-btn>
+      </div>
+      <div v-else>no changes</div>
 
     </div>
   </v-toolbar>
@@ -29,7 +40,6 @@
 <script lang="ts" setup>
   import { useAppStore } from '@/stores/app'
   import DM from '@/use/data-manager'
-  import { getFilename, pushRepoFile } from '@/use/repo-api'
   import { storeToRefs } from 'pinia'
   import { onMounted } from 'vue'
   import { useToast } from 'vue-toastification'
@@ -43,6 +53,11 @@
   function toggleTheme() {
     theme.toggle()
     app.setTheme(theme.name.value)
+  }
+
+  async function discardChanges() {
+    await DM.updateData()
+    toast.warning("discarded all changes")
   }
 
   async function commitChanges() {

@@ -13,6 +13,7 @@ export type RatingCategory = {
   id: number,
   name: string,
   type: string,
+  variant: string,
   description: string,
   min?: number,
   max?: number
@@ -82,6 +83,14 @@ class DataManager {
     this.ratings = ratings
     this.ratingsHash = hash(ratings)
     this.categories = categories
+  }
+
+  async updateData() {
+    await this.loadData()
+    const app = useAppStore()
+    app.changes.clear()
+    app._timeItems = Date.now()
+    app._timeRatings = Date.now()
   }
 
   async updateItems() {
@@ -164,28 +173,28 @@ class DataManager {
     app._timeRatings = Date.now()
   }
 
-  getRaters(name: string, ratingType?: string) {
+  getRaters(name: string, variant?: string) {
     const app = useAppStore()
     const raters: Array<string> = []
     for (let i = 0; i < app.users.length; ++i) {
-      if (this.hasUserRatings(name, app.users[i], ratingType)) {
+      if (this.hasUserRatings(name, app.users[i], variant)) {
         raters.push(app.users[i] as string)
       }
     }
     return raters
   }
 
-  hasRatings(name: string, ratingType?: string) {
+  hasRatings(name: string, variant?: string) {
     const app = useAppStore()
     for (let i = 0; i < app.users.length; ++i) {
-      if (this.hasUserRatings(name, app.users[i], ratingType)) {
+      if (this.hasUserRatings(name, app.users[i], variant)) {
         return true
       }
     }
     return false
   }
 
-  hasUserRatings(name: string, user?: string, ratingType?: string) {
+  hasUserRatings(name: string, user?: string, variant?: string) {
     const app = useAppStore()
     user = user || app.currentUser
     if (!this.ratings[user]) {
@@ -197,12 +206,17 @@ class DataManager {
       return false
     }
 
-    const cats = ratingType !== undefined ?
-      this.categories.filter(c => c.type === ratingType) :
+    const cats = variant !== undefined ?
+      this.categories.filter(c => c.variant === variant) :
       this.categories
 
     const itemRanks = userRanks[name] || {}
     return cats.some(c => itemRanks[c.id] !== undefined && itemRanks[c.id] !== this.getCategoryDefault(c.id))
+  }
+
+  hasAnyUserRatings(user: string) {
+    const userRanks = this.ratings[user] || {}
+    return Reflect.ownKeys(userRanks).length > 0
   }
 
   getRating(name: string, category: number, user?: string) {

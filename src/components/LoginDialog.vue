@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="loginDialog" persistent max-width="50%">
+  <v-dialog v-model="loginDialog" persistent min-width="50%" max-width="700">
     <v-card title="Enter Database Token and Select User">
       <v-card-text>
 

@@ -1,7 +1,7 @@
 <template>
   <v-card class="d-flex justify-center align-start" density="compact">
 
-    <div class="mr-4 mt-1" style="min-width: 500px">
+    <div class="mr-4 mt-1" style="min-width: 450px; font-size: small">
       <v-container>
         <v-row v-for="(_value, key) in weights" :key="'w_'+key" density="compact">
           <v-col>{{ key }}</v-col>
@@ -23,14 +23,14 @@
 
       <v-divider class="mt-2 mb-2"></v-divider>
 
-      <v-container max-height="65vh" style="overflow-y: auto;">
+      <v-container max-height="65vh" style="overflow-y: auto;;">
         <v-row density="compact">
           <v-col
-            v-for="(name, idx) in filterNames"
-            :key="'f_'+name"
+            v-for="(cat, idx) in filterCats"
+            :key="'f_'+cat.id"
             style="text-align: center;"
-            :offset="idx === 0 ? 3 : 0">
-            <b>{{ name }}</b>
+            :offset="idx === 0 ? 2 : 0">
+            <b>{{ cat.name }}</b>
           </v-col>
         </v-row>
 
@@ -40,17 +40,18 @@
           density="compact"
           >
 
-          <v-col>{{ user }}</v-col>
+          <v-col cols="2" class="d-flex align-center">{{ user }}</v-col>
           <v-col
-            v-for="name in filterNames"
-            :key="'fv_'+user+'_'+name"
+            v-for="cat in filterCats"
+            :key="'fv_'+user+'_'+cat.id"
             >
             <div class="d-flex justify-center" style="width: 100%;">
               <v-checkbox
-                v-model="values[name]"
+                v-model="values[cat.id]"
                 density="compact"
-                color="error"
-                true-icon="mdi-close-box"
+                :color="cat.variant === 'include' ? 'success' : 'error'"
+                :true-icon="cat.variant === 'include' ? 'mdi-checkbox-marked' : 'mdi-close-box'"
+                style="font-size: small"
                 @update:model-value="loadData"
                 hide-details
                 hide-spin-buttons
@@ -112,7 +113,8 @@
         <template v-slot:item.raters="{ value }">
           <v-chip v-for="u in value"
             density="compact"
-            class="text-body-small"
+            variant="flat"
+            class="text-body-small mr-1"
             >
             {{ u }}
           </v-chip>
@@ -125,7 +127,7 @@
 
 <script setup lang="ts">
   import { useAppStore } from '@/stores/app';
-  import type { RatingItem } from '@/use/data-manager';
+  import type { RatingCategory, RatingItem } from '@/use/data-manager';
   import DM from '@/use/data-manager';
   import { getGenderColor, getGenderIcon } from '@/use/utils';
   import { storeToRefs } from 'pinia';
@@ -145,16 +147,17 @@
   const headers = [
     { title: "Name", key: "item.name" },
     { title: "Score", key: "score" },
-    { title: "Raters", key: "raters" }
+    { title: "Raters", key: "raters", maxWidth: 300 }
   ]
 
   type CategoryWeight = Record<string, number>
-  type FilterValue = Record<string, boolean>
+  type Filter = { variant: string, value: boolean }
+  type FilterValue = Record<string, Filter>
   type CategoryFilter = Record<string, FilterValue>
 
   const weights: Reactive<CategoryWeight> = reactive({})
 
-  const filterNames: Ref<Array<string>> = ref([])
+  const filterCats: Ref<Array<RatingCategory>> = ref([])
   const filters: Reactive<CategoryFilter> = reactive({})
 
   function roundHalf(num: number) {
@@ -165,7 +168,7 @@
     let score = 0, sumWeights = 0
     DM.categories.forEach(c => {
       const defaultValue = DM.getCategoryDefault(c.id)
-      if (c.type === "integer") {
+      if (c.variant === "score") {
         let catScore = 0, numUsers = 0
         app.users.forEach(u => {
           const ur = DM.getRating(name, c.id, u)
@@ -189,13 +192,13 @@
     // for all users, check if this item matches their filters
     for (let j = 0; j < users.value.length; ++j) {
       const user = users.value[j] || ""
-      // for all boolean filters (except favorites)
-      for (let i = 0; i < filterNames.value.length; ++i) {
-        const cat = DM.categories.find(d => d.name === filterNames.value[i])
+      // check if all filters match
+      for (let i = 0; i < filterCats.value.length; ++i) {
+        const cat = filterCats.value[i]
         if (cat) {
-          const exclude = filters[user]?.[cat.name] || false
-          if (exclude && DM.getRating(name, cat.id, user) === true) {
-            return false
+          const value = filters[user]?.[cat.id] || false
+          if (value && DM.getRating(name, cat.id, user) === true) {
+            return cat.variant === "include"
           }
         }
       }
@@ -207,11 +210,11 @@
     const withScore: Array<AggItem> = []
 
     DM.items.forEach(d => {
-      if (DM.hasRatings(d.name, "integer") && matchesFilters(d.name)) {
+      if (DM.hasRatings(d.name, "score") && matchesFilters(d.name)) {
         withScore.push({
           item: d,
           score: calcScore(d.name),
-          raters: DM.getRaters(d.name, "integer")
+          raters: DM.getRaters(d.name, "score")
         })
       }
     })
@@ -221,20 +224,26 @@
   }
 
   function init() {
-    const fnames: Array<string> = []
+    const fnames: Array<RatingCategory> = []
     DM.categories.forEach(c => {
-      if (c.type === "integer") {
+      if (c.variant === "score") {
         weights[c.name] = 1
-      } else if (c.type === "boolean" && c.id !== 1) {
-        fnames.push(c.name)
+      } else if (c.variant === "exclude" || c.variant === "include") {
+        fnames.push(c)
       }
     })
-    filterNames.value = fnames
+    filterCats.value = fnames
 
     users.value.forEach((u: string) => {
-      const tmp: FilterValue = {}
-      fnames.forEach(c => tmp[c] = false)
-      filters[u] = tmp
+      // if the user has made any ratings
+      if (DM.hasAnyUserRatings(u)) {
+        const tmp: FilterValue = {}
+        fnames.forEach(c => tmp[c.id] = {
+          variant: c.variant,
+          value: false
+        })
+        filters[u] = tmp
+      }
     })
 
     loadData()
