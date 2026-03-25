@@ -61,6 +61,9 @@
       </v-row>
 
     </v-container>
+    <div v-else style="text-align: center; font-size: large;" class="mt-4 mb-4">
+      no unrated items left
+    </div>
   </v-card>
 </template>
 

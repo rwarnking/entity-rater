@@ -31,6 +31,8 @@
       </div>
     </v-main>
 
+    <ToolTip/>
+
   </v-app>
 </template>
 
@@ -47,7 +49,8 @@
   import AnalysisView from './components/AnalysisView.vue';
   import ItemDialog from './components/ItemDialog.vue';
   import { useToast } from 'vue-toastification';
-import LeavePageDialog from './components/LeavePageDialog.vue';
+  import LeavePageDialog from './components/LeavePageDialog.vue';
+  import ToolTip from './components/ToolTip.vue';
 
   const tab = ref("rating")
 

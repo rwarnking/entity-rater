@@ -214,6 +214,11 @@ class DataManager {
     return cats.some(c => itemRanks[c.id] !== undefined && itemRanks[c.id] !== this.getCategoryDefault(c.id))
   }
 
+  hasUserCategoryRating(name: string, user: string, category: number) {
+    const userRanks = this.getUserRating(name, user)
+    return userRanks && userRanks[category]
+  }
+
   hasAnyUserRatings(user: string) {
     const userRanks = this.ratings[user] || {}
     return Reflect.ownKeys(userRanks).length > 0
@@ -224,6 +229,11 @@ class DataManager {
     user = user || app.currentUser
     const userRanks = this.ratings[user] || {}
     return userRanks[name]?.[category] ?? this.getCategoryDefault(category)
+  }
+
+  getUserRating(name: string, user: string) {
+    const userRanks = this.ratings[user] || {}
+    return userRanks[name]
   }
 
   addItem(name: string, gender: Array<string>) {

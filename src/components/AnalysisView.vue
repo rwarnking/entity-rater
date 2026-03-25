@@ -23,7 +23,7 @@
 
       <v-divider class="mt-2 mb-2"></v-divider>
 
-      <v-container max-height="65vh" style="overflow-y: auto;;">
+      <v-container max-height="65vh" style="overflow-y: auto;">
         <v-row density="compact">
           <v-col
             v-for="(cat, idx) in filterCats"
@@ -46,8 +46,9 @@
             :key="'fv_'+user+'_'+cat.id"
             >
             <div class="d-flex justify-center" style="width: 100%;">
+              <!-- @vue-ignore -->
               <v-checkbox
-                v-model="values[cat.id]"
+                v-model="values[cat.id].value"
                 density="compact"
                 :color="cat.variant === 'include' ? 'success' : 'error'"
                 :true-icon="cat.variant === 'include' ? 'mdi-checkbox-marked' : 'mdi-close-box'"
@@ -110,11 +111,14 @@
             />
         </template>
 
-        <template v-slot:item.raters="{ value }">
+        <template v-slot:item.raters="{ value, item }">
           <v-chip v-for="u in value"
             density="compact"
             variant="flat"
             class="text-body-small mr-1"
+            @pointerenter="onHover($event, item, u)"
+            @pointermove="onHoverUpdate($event)"
+            @pointerleave="onHover"
             >
             {{ u }}
           </v-chip>
@@ -127,6 +131,7 @@
 
 <script setup lang="ts">
   import { useAppStore } from '@/stores/app';
+  import { useTooltip } from '@/stores/tooltip';
   import type { RatingCategory, RatingItem } from '@/use/data-manager';
   import DM from '@/use/data-manager';
   import { getGenderColor, getGenderIcon } from '@/use/utils';
@@ -139,6 +144,7 @@
     raters: Array<string>
   }
 
+  const tt = useTooltip()
   const app = useAppStore()
   const { _timeItems, _timeRatings, users } = storeToRefs(app)
 
@@ -159,6 +165,25 @@
 
   const filterCats: Ref<Array<RatingCategory>> = ref([])
   const filters: Reactive<CategoryFilter> = reactive({})
+
+  function onHover(event: any, item?: AggItem, user?: string) {
+    if (item && user) {
+      const mx = event.clientX + 10
+      const my = event.clientY + 10
+      const rating = DM.getUserRating(item.item.name, user)
+      if (rating) {
+        tt.showRating(rating, mx, my, `${user} ratings for <b>${item.item.name}</b>`)
+      }
+    } else {
+      tt.hide()
+    }
+  }
+
+  function onHoverUpdate(event: any) {
+    const mx = event.clientX + 10
+    const my = event.clientY + 10
+    tt.update(mx, my)
+  }
 
   function roundHalf(num: number) {
     return Math.round(num*2) / 2
@@ -189,21 +214,28 @@
   }
 
   function matchesFilters(name: string) {
+    let matches = true
     // for all users, check if this item matches their filters
     for (let j = 0; j < users.value.length; ++j) {
       const user = users.value[j] || ""
+      if (!DM.hasUserRatings(name, user)) continue
       // check if all filters match
       for (let i = 0; i < filterCats.value.length; ++i) {
         const cat = filterCats.value[i]
         if (cat) {
-          const value = filters[user]?.[cat.id] || false
-          if (value && DM.getRating(name, cat.id, user) === true) {
-            return cat.variant === "include"
+          if (!DM.hasUserCategoryRating(name, user, cat.id)) continue
+          const value = filters[user]?.[cat.id]?.value || false
+          const ratingValue = DM.getRating(name, cat.id, user)
+          if (value === true && ratingValue === true) {
+            if (cat.variant === "include") {
+              return true
+            }
+            matches = false
           }
         }
       }
     }
-    return true
+    return matches
   }
 
   function loadData() {
