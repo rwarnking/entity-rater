@@ -104,7 +104,7 @@
           <v-rating
             :model-value="value"
             :length="5"
-            :color="value > 0 ? 'amber' : 'default'"
+            :active-color="value > 0 ? 'amber' : 'default'"
             half-increments
             density="compact"
             readonly

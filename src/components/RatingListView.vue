@@ -58,7 +58,7 @@
                 @update:model-value="updateRating(item.name, c.id)"
                 :length="c?.max"
                 density="compact"
-                :color="ratings[item.name][c.id] > 0 ? 'amber' : 'default'"
+                :active-color="ratings[item.name][c.id] > 0 ? 'amber' : 'default'"
                 :half-increments="false"
                 />
 

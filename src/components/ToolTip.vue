@@ -21,7 +21,7 @@
             v-if="cat.type === 'integer'"
             :model-value="rating[cat.id]"
             :length="cat.max"
-            :color="rating[cat.id] > 0 ? 'amber' : 'default'"
+            :active-color="rating[cat.id] > 0 ? 'amber' : 'default'"
             size="small"
             density="compact"
             readonly

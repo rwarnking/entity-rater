@@ -28,7 +28,7 @@
             @update:model-value="updateRating(c.id)"
             :length="c?.max"
             density="compact"
-            :color="rating[c.id] > 0 ? 'amber' : 'default'"
+            :active-color="rating[c.id] > 0 ? 'amber' : 'default'"
             :half-increments="false"
             />
 
