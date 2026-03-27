@@ -36,6 +36,26 @@
       @update:currentItems="countMatches"
     >
 
+      <template v-slot:headers="{ columns, toggleSort, isSorted, getSortIcon }">
+        <tr>
+          <th v-for="c in columns">
+            <v-tooltip :text="headerDescs[''+c.key]" location="bottom" open-delay="250">
+              <template v-slot:activator="{ props }">
+                <span v-bind="props">{{ c.title ?? '?' }}</span>
+              </template>
+            </v-tooltip>
+            <v-icon
+              size="small"
+              class="ml-1"
+              @click="toggleSort(c)"
+              :color="isSorted(c) ? 'primary' : 'default'"
+              >
+              {{ isSorted(c) ? getSortIcon(c) : 'mdi-swap-vertical' }}
+            </v-icon>
+          </th>
+        </tr>
+      </template>
+
       <template v-slot:item="{ item }">
         <tr>
           <td>
@@ -99,6 +119,7 @@
   const categories: Ref<Array<RatingCategory>> = ref([])
 
   const headers: Ref<Array<{ title: string, key: string }>> = ref([])
+  const headerDescs : Ref<Record<string, string>> = ref({})
 
   function countMatches(visible: Array<any>) {
     if (search.value) {
@@ -128,14 +149,19 @@
       obj[d.name] = silly
     })
 
+    const hd: Record<string, string> = { "name": "the name" }
     let h = [{ title: "Name", key: "name" }]
-    h = h.concat(DM.categories.map(c => ({
-      title: c.name,
-      key: ""+c.id,
-      // @ts-ignore
-      value: (d: any) => ratings.value[d.name][c.id]
-    })))
+    h = h.concat(DM.categories.map(c => {
+      hd[""+c.id] = c.description
+      return {
+        title: c.name,
+        key: ""+c.id,
+        // @ts-ignore
+        value: (d: any) => ratings.value[d.name][c.id]
+      }
+    }))
 
+    headerDescs.value = hd
     headers.value = h
     ratings.value = obj
     items.value = DM.items
