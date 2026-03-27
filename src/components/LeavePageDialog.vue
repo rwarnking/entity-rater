@@ -36,7 +36,7 @@
   async function commitChanges() {
     const messages = await DM.commitChanges()
     model.value = false
-    messages.forEach(m => toast.success(m))
+    messages.forEach(m => toast(m.content, { type: m.type }))
   }
 
 

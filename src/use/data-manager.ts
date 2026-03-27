@@ -2,6 +2,7 @@ import { useAppStore } from "@/stores/app"
 import { Octokit } from "@octokit/rest"
 import hash from "object-hash"
 import { getFilename, getRepoFile, pushRepoFile } from "./repo-api"
+import { TYPE } from "vue-toastification"
 
 export type RatingValue = number | boolean
 export type AttributeRating = Record<number, RatingValue>
@@ -117,28 +118,31 @@ class DataManager {
 
   async commitChanges() {
     const app = useAppStore()
-    const messages: Array<string> = []
+    const messages: Array<{ type: TYPE, content: string}> = []
 
-    if (!app.hasChanges || !app.currentUser || !this.github ) {
+    if (!app.hasChanges || !app.currentUser || !this.github) {
       return messages
     }
 
     const names = Array.from(app.changes.values())
 
-    const proms = names.map(async (key: string) => {
-      return pushRepoFile(
-        getFilename(key, app.currentUser),
-        `${app.currentUser} changed ${key}`,
-        // @ts-ignore
-        key === __GITHUB_DATA_ITEMS__ ? DM.items : DM.ratings[app.currentUser]
-      ).then(() => {
-        messages.push("saved changes to " + key)
+    for (let i = 0; i < names.length; ++i) {
+      const key = names[i]
+      if (!key) continue
+
+      try {
+        await pushRepoFile(
+          getFilename(key, app.currentUser),
+          `${app.currentUser} changed ${key}`,
+          // @ts-ignore
+          key === __GITHUB_DATA_ITEMS__ ? DM.items : DM.ratings[app.currentUser]
+        )
         app.deleteChanges(key)
-      })
-
-    })
-
-    await Promise.all(proms)
+        messages.push({ type: TYPE.SUCCESS, content: "saved changes to " + key })
+      } catch (error: any) {
+        messages.push({ type: TYPE.ERROR, content: error.toString()})
+      }
+    }
 
     return messages
   }

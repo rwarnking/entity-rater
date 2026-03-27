@@ -62,7 +62,7 @@
 
   async function commitChanges() {
     const messages = await DM.commitChanges()
-    messages.forEach(m => toast.success(m))
+    messages.forEach(m => toast(m.content, { type: m.type }))
   }
 
   onMounted(function() {
