@@ -155,10 +155,21 @@
     items.value = DM.items
   }
 
+  function onRatingUpdate() {
+    for (const name in ratings.value) {
+      DM.categories.forEach(c => {
+        // this is silly
+        if (ratings.value[name]) {
+          ratings.value[name][c.id] = DM.getRating(name, c.id)
+        }
+      })
+    }
+  }
+
   onMounted(loadData)
 
   onUpdated(onItemUpdate)
 
   watch(_timeItems, onItemUpdate)
-  watch(_timeRatings, onItemUpdate)
+  watch(_timeRatings, onRatingUpdate)
 </script>

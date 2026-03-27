@@ -150,13 +150,14 @@ class DataManager {
 
     const userRatings = this.ratings[user] || {}
     const userItemRatings = userRatings[name] || {}
-    userItemRatings[category] = value
 
     if (value === this.getCategoryDefault(category)) {
-      delete userRatings[name]
+      delete userItemRatings[category]
     } else {
-      userRatings[name] = userItemRatings
+      userItemRatings[category] = value
     }
+
+    userRatings[name] = userItemRatings
 
     this.ratings[user] = userRatings
 
@@ -228,7 +229,16 @@ class DataManager {
     const app = useAppStore()
     user = user || app.currentUser
     const userRanks = this.ratings[user] || {}
-    return userRanks[name]?.[category] ?? this.getCategoryDefault(category)
+    if (!userRanks) {
+      return this.getCategoryDefault(category)
+    }
+
+    const itemRank = userRanks[name]
+    if (!itemRank) {
+      return this.getCategoryDefault(category)
+    }
+
+    return itemRank[category] ?? this.getCategoryDefault(category)
   }
 
   getUserRating(name: string, user: string) {
