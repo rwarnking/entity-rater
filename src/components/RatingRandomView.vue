@@ -68,32 +68,77 @@
 </template>
 
 <script lang="ts" setup>
+  import { TABS, useAppStore } from '@/stores/app';
   import DM, { type AttributeRating, type RatingCategory, type RatingItem } from '@/use/data-manager';
   import { shuffle } from '@/use/random';
   import { getGenderColor, getGenderIcon } from '@/use/utils';
-  import { ref, onMounted, type Ref, computed  } from 'vue';
+  import { storeToRefs } from 'pinia';
+  import { ref, onMounted, type Ref, computed, watch } from 'vue';
 
-  const index = ref(0)
+  const app = useAppStore()
+  const { _timeRatings, _timeItems } = storeToRefs(app)
 
-  const items: Ref<Array<RatingItem>> = ref([])
+  const activeId = ref("")
+
+  const items: Ref<Map<string, RatingItem>> = ref(new Map())
   const rating: Ref<AttributeRating> = ref({})
   const categories: Ref<Array<RatingCategory>> = ref([])
 
   const activeItem = computed(() => {
-    return items.value.length > index.value ?
-      items.value[index.value] as RatingItem :
+    return items.value.has(activeId.value) ?
+      items.value.get(activeId.value) as RatingItem :
       { name: "", gender: [] }
   })
 
-  const hasNext = computed(() => index.value < items.value.length-1)
+  const hasNext = computed(() => items.value.size > 0)
 
   function updateRating(category: number) {
-    if (activeItem.value.name && rating.value[category] !== undefined) {
+    if (activeId.value && rating.value[category] !== undefined) {
       DM.setRating(
-        activeItem.value.name,
+        activeId.value,
         category,
         rating.value[category]
       )
+    }
+  }
+
+  function nextItem() {
+    if (hasNext.value) {
+      if (activeId.value) {
+        items.value.delete(activeId.value)
+      }
+      // reset rating values
+      const obj: AttributeRating = {}
+      DM.categories.forEach(c => obj[c.id] = DM.getCategoryDefault(c.id))
+      rating.value = obj
+      // get the next active id
+      activeId.value = Array.from(items.value.keys())[0] || ""
+    }
+  }
+
+  function onUpdate() {
+    const existing = Array.from(items.value.keys())
+    let needsNext = false
+
+    // remove existing entities with a rating
+    existing.forEach(id => {
+      if (DM.hasUserRatings(id)) {
+        items.value.delete(id)
+        if (activeId.value === id) {
+          needsNext = true
+        }
+      }
+    })
+
+    // add new entities without a rating
+    DM.items.forEach(d => {
+      if (!DM.hasUserRatings(d.name) && !items.value.has(d.name)) {
+        items.value.set(d.name, d)
+      }
+    })
+
+    if (needsNext) {
+      nextItem()
     }
   }
 
@@ -104,32 +149,23 @@
 
     // get items without a rating
     DM.items.forEach(d => {
-
       if (!DM.hasUserRatings(d.name)) {
         remaining.push(d)
       }
-
     })
 
-    const obj: AttributeRating = {}
-    DM.categories.forEach(c => obj[c.id] = DM.getCategoryDefault(c.id))
+    items.value = new Map(shuffle(remaining).map(d => ([d.name, d])))
 
-    index.value = 0
-    rating.value = obj
-    items.value = shuffle(remaining)
-  }
-
-  function nextItem() {
-    if (hasNext.value) {
-      index.value++
-      const obj: AttributeRating = {}
-      DM.categories.forEach(c => obj[c.id] = DM.getCategoryDefault(c.id))
-      rating.value = obj
-    }
+    nextItem()
   }
 
   onMounted(loadData)
 
-  // TODO: handle upadtes somehow
-  // watch(_timeItems, onItemUpdate)
+  // handle updates
+  watch(_timeItems, onUpdate)
+  watch(_timeRatings, function() {
+    if (app.tab !== TABS.RANDOM) {
+      onUpdate()
+    }
+  })
 </script>

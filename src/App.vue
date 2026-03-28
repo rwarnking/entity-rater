@@ -10,21 +10,21 @@
       <div v-if="loaded && loggedIn">
 
         <v-tabs v-model="tab" align-tabs="center">
-          <v-tab value="rating_list">Rating List</v-tab>
-          <v-tab value="rating_random">Random Rating</v-tab>
-          <v-tab value="analysis">Analysis</v-tab>
+          <v-tab :value="TABS.RATING">Rating List</v-tab>
+          <v-tab :value="TABS.RANDOM">Random Rating</v-tab>
+          <v-tab :value="TABS.ANALYSIS">Analysis</v-tab>
         </v-tabs>
 
         <v-window v-model="tab">
-          <v-window-item value="rating_list">
+          <v-window-item :value="TABS.RATING">
             <RatingListView/>
           </v-window-item>
 
-          <v-window-item value="rating_random">
+          <v-window-item :value="TABS.RANDOM">
             <RatingRandomView/>
           </v-window-item>
 
-          <v-window-item value="analysis">
+          <v-window-item :value="TABS.ANALYSIS">
             <AnalysisView/>
           </v-window-item>
         </v-window>
@@ -40,7 +40,7 @@
   import DM from './use/data-manager';
   import { onBeforeMount, onMounted, ref, watch } from 'vue';
   import { storeToRefs } from 'pinia';
-  import { useAppStore } from '@/stores/app';
+  import { TABS, useAppStore } from '@/stores/app';
   import RatingListView from './components/RatingListView.vue';
   import TopBar from './components/TopBar.vue';
   import LoginDialog from './components/LoginDialog.vue';
@@ -52,11 +52,9 @@
   import LeavePageDialog from './components/LeavePageDialog.vue';
   import ToolTip from './components/ToolTip.vue';
 
-  const tab = ref("rating")
-
   const toast = useToast()
   const app = useAppStore()
-  const { loaded, loggedIn, users } = storeToRefs(app)
+  const { tab, loaded, loggedIn, users } = storeToRefs(app)
 
   let loading = false
 

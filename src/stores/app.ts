@@ -2,11 +2,18 @@
 import { defineStore } from 'pinia'
 import { computed, ref, type Ref } from 'vue'
 
+export const TABS = Object.freeze({
+  RATING: "rating",
+  RANDOM: "rating_random",
+  ANALYSIS: "analysis"
+})
+
 export const useAppStore = defineStore('app', () => {
 
   // state
   const theme = ref("system")
   const loaded = ref(false)
+  const tab: Ref<string> = ref(TABS.RATING)
 
   const token = ref("")
   const loginDialog = ref(true)
@@ -84,6 +91,7 @@ export const useAppStore = defineStore('app', () => {
   return {
     theme,
     loaded,
+    tab,
     token,
     loginDialog,
     currentUser,
