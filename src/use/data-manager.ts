@@ -16,6 +16,7 @@ export type RatingCategory = {
   type: string,
   variant: string,
   description: string,
+  example?: string,
   min?: number,
   max?: number
 }

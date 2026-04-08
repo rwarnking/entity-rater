@@ -39,7 +39,15 @@
       <template v-slot:headers="{ columns, toggleSort, isSorted, getSortIcon }">
         <tr>
           <th v-for="c in columns">
-            <v-tooltip :text="headerDescs[''+c.key]" location="bottom" open-delay="250">
+            <v-tooltip :text="headerDescs[''+c.key]" location="bottom" open-delay="250" max-width="450px">
+              <template v-slot:default>
+                <p class="text-body-small">
+                  <b>Idea:</b> {{ headerDescs[''+c.key] }}
+                  <p v-if="headerEx[''+c.key]"><b>Example: </b>
+                    <span v-html="headerEx[''+c.key]"></span>
+                  </p>
+                </p>
+              </template>
               <template v-slot:activator="{ props }">
                 <span v-bind="props">{{ c.title ?? '?' }}</span>
               </template>
@@ -120,6 +128,7 @@
 
   const headers: Ref<Array<{ title: string, key: string }>> = ref([])
   const headerDescs : Ref<Record<string, string>> = ref({})
+  const headerEx : Ref<Record<string, string>> = ref({})
 
   function countMatches(visible: Array<any>) {
     if (search.value) {
@@ -150,9 +159,14 @@
     })
 
     const hd: Record<string, string> = { "name": "the name" }
+    const he: Record<string, string> = {}
+
     let h = [{ title: "Name", key: "name" }]
     h = h.concat(DM.categories.map(c => {
       hd[""+c.id] = c.description
+      if (c.example) {
+        he[""+c.id] = c.example
+      }
       return {
         title: c.name,
         key: ""+c.id,
@@ -162,6 +176,7 @@
     }))
 
     headerDescs.value = hd
+    headerEx.value = he
     headers.value = h
     ratings.value = obj
     items.value = DM.items
