@@ -9,7 +9,18 @@
         @click="toggleTheme"
         />
 
-      <v-chip density="compact" variant="flat">{{ currentUser || '?' }}</v-chip>
+      <div>
+        <v-chip density="compact" variant="flat">
+          {{ currentUser || '?' }}
+        </v-chip>
+        <v-btn v-if="currentUser"
+          class="ml-2"
+          icon="mdi-pencil"
+          density="compact"
+          variant="plain"
+          @click="loginDialog = true"
+          />
+      </div>
 
       <div v-if="hasChanges">
         <v-btn
@@ -48,7 +59,7 @@
   const theme = useTheme()
   const toast = useToast()
   const app = useAppStore()
-  const { currentUser, hasChanges } = storeToRefs(app)
+  const { currentUser, hasChanges, loginDialog } = storeToRefs(app)
 
   function toggleTheme() {
     theme.toggle()

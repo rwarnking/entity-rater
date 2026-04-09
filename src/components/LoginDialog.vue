@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="loginDialog" persistent min-width="50%" max-width="700">
+  <v-dialog v-model="loginDialog" :persistent="!loggedIn" min-width="50%" max-width="700">
     <v-card title="Enter Database Token and Select User">
       <v-card-text>
 
@@ -27,6 +27,12 @@
       </v-card-text>
 
       <v-card-actions>
+        <v-btn v-if="loggedIn"
+          color="warning"
+          @click="cancel"
+          >
+          cancel
+        </v-btn>
         <v-btn
           color="success"
           @click="submit"
@@ -41,9 +47,9 @@
 
 <script lang="ts" setup>
   import { useAppStore } from '@/stores/app';
-import DM from '@/use/data-manager';
+  import DM from '@/use/data-manager';
   import { storeToRefs } from 'pinia';
-  import { onMounted } from 'vue';
+  import { onMounted, ref, watch } from 'vue';
 
   const app = useAppStore()
   const {
@@ -54,13 +60,33 @@ import DM from '@/use/data-manager';
     loggedIn
   } = storeToRefs(app)
 
+  const prevUser = ref("")
+  const prevToken = ref("")
+
+  function cancel() {
+    const hasLogin = prevToken.value && prevUser.value
+    if (hasLogin) {
+      if (prevToken.value) {
+        app.setGithubToken(prevToken.value)
+      }
+      if (prevUser.value) {
+        app.setUser(prevUser.value)
+        DM.init(token.value)
+      }
+    }
+    prevUser.value = ""
+    prevToken.value = ""
+    loginDialog.value = false
+    loggedIn.value = token.value.length > 0 && currentUser.value.length > 0
+  }
 
   function submit() {
     if (token.value) {
       app.setGithubToken(token.value)
       if (currentUser.value) {
+        app.setUser(currentUser.value)
         DM.init(token.value)
-        loggedIn.value = true
+        app.setLoggedIn()
         loginDialog.value = false
       } else {
         // TODO: toast - missing user
@@ -69,6 +95,13 @@ import DM from '@/use/data-manager';
       // TODO: toast - missing token
     }
   }
+
+  watch(loginDialog, function(show) {
+    if (show) {
+      prevUser.value = currentUser.value
+      prevToken.value = token.value
+    }
+  })
 
   onMounted(function() {
     const hasLogin = token.value.length > 0 && currentUser.value.length > 0

@@ -38,7 +38,7 @@
 
 <script lang="ts" setup>
   import DM from './use/data-manager';
-  import { onBeforeMount, onMounted, ref, watch } from 'vue';
+  import { onBeforeMount, onMounted, watch } from 'vue';
   import { storeToRefs } from 'pinia';
   import { TABS, useAppStore } from '@/stores/app';
   import RatingListView from './components/RatingListView.vue';
@@ -54,7 +54,13 @@
 
   const toast = useToast()
   const app = useAppStore()
-  const { tab, loaded, loggedIn, users } = storeToRefs(app)
+  const {
+    tab,
+    loaded,
+    users,
+    loggedIn,
+    _timeLogin
+  } = storeToRefs(app)
 
   let loading = false
 
@@ -76,6 +82,24 @@
     loading = false
   }
 
+  async function reloadData() {
+    try {
+    // @ts-ignore
+      users.value = await getRepoFile(getFilename(__GITHUB_DATA_USERS__))
+      await DM.updateData()
+
+      if (DM.items.length > 0) {
+        app.setLoaded(true)
+        toast.info("reloaded data")
+      } else {
+        toast.error("data error - API rate limit exceeded?")
+      }
+
+    } catch (e: any) {
+      toast.error(e.toString())
+    }
+  }
+
   onBeforeMount(function() {
     // read data from local storage first
     app.readStorage()
@@ -83,6 +107,6 @@
 
   onMounted(loadData)
 
-  watch(loggedIn, loadData)
+  watch(_timeLogin, reloadData)
 
 </script>

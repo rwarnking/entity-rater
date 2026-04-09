@@ -30,6 +30,7 @@ export const useAppStore = defineStore('app', () => {
 
   const _timeItems = ref(0)
   const _timeRatings = ref(0)
+  const _timeLogin = ref(0)
 
   // getters
   const hasChanges = computed(() => changes.value.size > 0)
@@ -58,6 +59,11 @@ export const useAppStore = defineStore('app', () => {
   function setUser(username: string) {
     currentUser.value = username
     localStorage.setItem("USERNAME", username)
+  }
+
+  function setLoggedIn() {
+    loggedIn.value = true
+    _timeLogin.value = Date.now()
   }
 
   function addChanges(key: string) {
@@ -106,12 +112,14 @@ export const useAppStore = defineStore('app', () => {
 
     _timeItems,
     _timeRatings,
+    _timeLogin,
 
     setTheme,
     setLoaded,
     readStorage,
     setGithubToken,
     setUser,
+    setLoggedIn,
 
     addChanges,
     deleteChanges,
