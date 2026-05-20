@@ -40,7 +40,16 @@
           density="compact"
           >
 
-          <v-col cols="2" class="d-flex align-center">{{ user }}</v-col>
+          <v-col cols="2" class="d-flex align-center">
+            <v-chip
+              density="compact"
+              class="text-body-small"
+              :variant="chosenUsers.has(user) ? 'flat' : 'outlined'"
+              @click="toggleUser(user)"
+              >
+              {{ user }}
+            </v-chip>
+          </v-col>
           <v-col
             v-for="cat in filterCats"
             :key="'fv_'+user+'_'+cat.id"
@@ -115,7 +124,7 @@
           <v-chip v-for="u in value"
             density="compact"
             variant="flat"
-            class="text-body-small mr-1"
+            class="text-body-small mr-1 mb-1"
             @pointerenter="onHover($event, item, u)"
             @pointermove="onHoverUpdate($event)"
             @pointerleave="onHover"
@@ -136,7 +145,7 @@
   import DM from '@/use/data-manager';
   import { getGenderColor, getGenderIcon } from '@/use/utils';
   import { storeToRefs } from 'pinia';
-  import { onMounted, onUpdated, reactive, ref, watch, type Reactive, type Ref } from 'vue';
+  import { onMounted, onUpdated, reactive, ref, watch, computed, type Reactive, type Ref } from 'vue';
 
   type AggItem = {
     item: RatingItem,
@@ -147,6 +156,9 @@
   const tt = useTooltip()
   const app = useAppStore()
   const { _timeItems, _timeRatings, users } = storeToRefs(app)
+
+  const chosenUsers: Reactive<string> = reactive(new Set(users.value))
+  const allowedUsers = computed(() => users.value.filter((u: string) => chosenUsers.has(u)))
 
   const search = ref("")
   const items: Ref<Array<AggItem>> = ref([])
@@ -185,6 +197,15 @@
     tt.update(mx, my)
   }
 
+  function toggleUser(user: string) {
+    if (chosenUsers.has(user)) {
+      chosenUsers.delete(user)
+    } else {
+      chosenUsers.add(user)
+    }
+    loadData()
+  }
+
   function roundHalf(num: number) {
     return Math.round(num*2) / 2
   }
@@ -195,7 +216,7 @@
       const defaultValue = DM.getCategoryDefault(c.id)
       if (c.variant === "score") {
         let catScore = 0, numUsers = 0
-        app.users.forEach(u => {
+        allowedUsers.value.forEach((u: string) => {
           const ur = DM.getRating(name, c.id, u)
           if (ur !== defaultValue) {
             catScore += (ur as number)
@@ -216,8 +237,8 @@
   function matchesFilters(name: string) {
     let matches = true
     // for all users, check if this item matches their filters
-    for (let j = 0; j < users.value.length; ++j) {
-      const user = users.value[j] || ""
+    for (let j = 0; j < allowedUsers.value.length; ++j) {
+      const user = allowedUsers.value[j] || ""
       if (!DM.hasUserRatings(name, user)) continue
       // check if all filters match
       for (let i = 0; i < filterCats.value.length; ++i) {
@@ -246,7 +267,7 @@
         withScore.push({
           item: d,
           score: calcScore(d.name),
-          raters: DM.getRaters(d.name, "score")
+          raters: DM.getRaters(d.name, "score").filter(u => chosenUsers.has(u))
         })
       }
     })
