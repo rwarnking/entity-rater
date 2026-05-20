@@ -157,7 +157,7 @@
   const app = useAppStore()
   const { _timeItems, _timeRatings, users } = storeToRefs(app)
 
-  const chosenUsers: Reactive<string> = reactive(new Set(users.value))
+  const chosenUsers: Reactive<Set<string>> = reactive(new Set(users.value))
   const allowedUsers = computed(() => users.value.filter((u: string) => chosenUsers.has(u)))
 
   const search = ref("")
